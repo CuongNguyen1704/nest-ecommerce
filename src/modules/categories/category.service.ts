@@ -1,16 +1,19 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CategoryEntiy } from './category.entity';
+import { CategoryEntity } from './category.entity';
 import { Repository } from 'typeorm';
 import { CreateCategotyDTO } from './dto/create.dto';
 import { PaginaitonDTO } from 'src/common/dto/pagination.dto';
 import { UpdateCategoryDTO } from './dto/update.dto';
+import { ProductService } from '../products/product.service';
 
 @Injectable()
 export class CategoryService {
   constructor(
-    @InjectRepository(CategoryEntiy)
-    private readonly categoryRepo: Repository<CategoryEntiy>,
+    @InjectRepository(CategoryEntity)
+    private readonly categoryRepo: Repository<CategoryEntity>,
+
+    private readonly productService: ProductService,
   ) {}
 
   async createCategory(dto: CreateCategotyDTO) {
@@ -57,6 +60,7 @@ export class CategoryService {
   }
 
   async updateCategory(id: number, dto: UpdateCategoryDTO) {
+
     const category = await this.categoryRepo.find({
       where: {
         id: id,
@@ -86,26 +90,43 @@ export class CategoryService {
     if (!category) {
       throw new BadRequestException('Danh Mục không tồn tại');
     }
+
     await this.categoryRepo.softDelete(id);
+
+    await this.productService.softDeletByCategoryId(id);
+
     return {
-      message: 'xóa danh mục thành công',
+      message: 'xóa mềm danh mục thành công',
     };
   }
 
   async restore(id: number) {
     const category = await this.categoryRepo.findOne({
-      where: {id},
-      withDeleted:true
+      where: { id },
+      withDeleted: true,
     });
     if (!category) {
       throw new BadRequestException('Danh mục không tồn tại');
     }
-    if(category.delete_at == null){
-        throw new BadRequestException("Danh mục này chưa được xóa mềm")
+    if (category.delete_at == null) {
+      throw new BadRequestException('Danh mục này chưa được xóa mềm');
     }
-    await this.categoryRepo.restore(id)
+    await this.categoryRepo.restore(id);
+    
+    await this.productService.restore(id);
+
     return {
       message: 'khôi phục thành công',
     };
+  }
+
+  async findById(id: number) {
+    const category_id = await this.categoryRepo.findOne({
+      where: { id: id },
+    });
+    if (!category_id) {
+      throw new BadRequestException('Danh mục không tông tại');
+    }
+    return category_id;
   }
 }
