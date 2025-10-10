@@ -4,7 +4,10 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { CategoryModule } from './modules/categories/category.module';
-import { CategoryEntiy } from './modules/categories/category.entity';
+import { CategoryEntity } from './modules/categories/category.entity';
+import { ProductEntity } from './modules/products/entities/product.entity';
+import { ProductModule } from './modules/products/product.module';
+import { ProductVariantEnity } from './modules/products/entities/product_variant.entity';
 
 @Module({
   imports: [
@@ -18,11 +21,11 @@ import { CategoryEntiy } from './modules/categories/category.entity';
       username:process.env.DB_USER,
       password:process.env.DB_PASSWORD,
       database:process.env.DB_NAME,
-      entities:[CategoryEntiy],
+      entities:[CategoryEntity,ProductEntity,ProductVariantEnity],
       synchronize:true
 
     }),
-    CategoryModule
+    CategoryModule,ProductModule
   ],
   controllers: [AppController],
   providers: [AppService],
